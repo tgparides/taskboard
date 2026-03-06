@@ -111,6 +111,34 @@ export function useBoard(boardId) {
     return data
   }
 
+  async function addCardWithImage(columnId, file) {
+    // Upload image to storage
+    const ext = file.name.split('.').pop()
+    const path = `covers/${boardId}/${Date.now()}.${ext}`
+    const { error: uploadError } = await supabase.storage
+      .from('attachments')
+      .upload(path, file)
+    if (uploadError) throw uploadError
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('attachments')
+      .getPublicUrl(path)
+
+    // Create card with image as cover
+    const title = file.name.replace(/\.[^.]+$/, '')
+    const colCards = cards.filter(c => c.column_id === columnId).sort((a, b) => a.position - b.position)
+    const position = getInsertPosition(colCards, colCards.length)
+
+    const { data, error } = await supabase
+      .from('cards')
+      .insert({ column_id: columnId, title, position, cover_url: publicUrl })
+      .select(`*, card_labels(label_id), card_members(user_id, profiles(id, full_name, avatar_url))`)
+      .single()
+    if (error) throw error
+    setCards(prev => [...prev, data])
+    return data
+  }
+
   async function updateCard(cardId, updates) {
     const { error } = await supabase.from('cards').update(updates).eq('id', cardId)
     if (error) throw error
@@ -226,7 +254,7 @@ export function useBoard(boardId) {
   return {
     board, columns, cards, labels, members, loading,
     addColumn, updateColumn, deleteColumn, moveColumn,
-    addCard, updateCard, deleteCard, moveCard,
+    addCard, addCardWithImage, updateCard, deleteCard, moveCard,
     addLabel, toggleCardLabel,
     toggleCardMember, inviteMember,
     refetch: fetchBoard,

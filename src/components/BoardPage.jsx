@@ -16,7 +16,7 @@ export default function BoardPage() {
   const {
     board, columns, cards, labels, members, loading,
     addColumn, updateColumn, deleteColumn, moveColumn,
-    addCard, updateCard, deleteCard, moveCard,
+    addCard, addCardWithImage, updateCard, deleteCard, moveCard,
     addLabel, toggleCardLabel, toggleCardMember, inviteMember,
     refetch,
   } = useBoard(boardId)
@@ -142,6 +142,7 @@ export default function BoardPage() {
                   onUpdateColumn={updateColumn}
                   onDeleteColumn={deleteColumn}
                   onAddCard={addCard}
+                  onAddCardWithImage={addCardWithImage}
                   onCardClick={openCard}
                 />
               ))}
