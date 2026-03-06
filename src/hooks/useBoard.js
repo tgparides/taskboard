@@ -53,6 +53,13 @@ export function useBoard(boardId) {
 
   useEffect(() => { fetchBoard() }, [fetchBoard])
 
+  // Board operations
+  async function updateBoard(updates) {
+    const { error } = await supabase.from('boards').update(updates).eq('id', boardId)
+    if (error) throw error
+    setBoard(prev => ({ ...prev, ...updates }))
+  }
+
   // Column operations
   async function addColumn(title) {
     const position = getInsertPosition(columns, columns.length)
@@ -253,6 +260,7 @@ export function useBoard(boardId) {
 
   return {
     board, columns, cards, labels, members, loading,
+    updateBoard,
     addColumn, updateColumn, deleteColumn, moveColumn,
     addCard, addCardWithImage, updateCard, deleteCard, moveCard,
     addLabel, toggleCardLabel,

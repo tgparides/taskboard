@@ -15,6 +15,7 @@ export default function BoardPage() {
   const navigate = useNavigate()
   const {
     board, columns, cards, labels, members, loading,
+    updateBoard,
     addColumn, updateColumn, deleteColumn, moveColumn,
     addCard, addCardWithImage, updateCard, deleteCard, moveCard,
     addLabel, toggleCardLabel, toggleCardMember, inviteMember,
@@ -114,7 +115,7 @@ export default function BoardPage() {
 
   return (
     <Layout>
-      <BoardHeader board={board} members={members} onInvite={inviteMember} />
+      <BoardHeader board={board} members={members} onInvite={inviteMember} onUpdateBoard={updateBoard} />
 
       <SearchFilter
         labels={labels}

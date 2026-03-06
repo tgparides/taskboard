@@ -1,9 +1,20 @@
 import { useState } from 'react'
 
-export default function BoardHeader({ board, members, onInvite }) {
+export default function BoardHeader({ board, members, onInvite, onUpdateBoard }) {
   const [showInvite, setShowInvite] = useState(false)
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [title, setTitle] = useState(board.title)
+
+  function saveTitle() {
+    if (title.trim() && title.trim() !== board.title) {
+      onUpdateBoard({ title: title.trim() })
+    } else {
+      setTitle(board.title)
+    }
+    setEditingTitle(false)
+  }
 
   async function handleInvite(e) {
     e.preventDefault()
@@ -22,7 +33,23 @@ export default function BoardHeader({ board, members, onInvite }) {
       className="px-4 py-2 flex items-center gap-3 border-b"
       style={{ backgroundColor: board.color ? `${board.color}dd` : '#3b82f6dd' }}
     >
-      <h2 className="text-lg font-bold text-white">{board.title}</h2>
+      {editingTitle ? (
+        <input
+          autoFocus
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          onBlur={saveTitle}
+          onKeyDown={e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') { setTitle(board.title); setEditingTitle(false) } }}
+          className="text-lg font-bold text-white bg-white/20 border border-white/40 rounded px-2 py-0.5 focus:outline-none"
+        />
+      ) : (
+        <h2
+          onClick={() => setEditingTitle(true)}
+          className="text-lg font-bold text-white cursor-pointer hover:bg-white/20 rounded px-2 py-0.5"
+        >
+          {board.title}
+        </h2>
+      )}
 
       <div className="flex -space-x-1 ml-2">
         {members.map(m => (
