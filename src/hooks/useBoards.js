@@ -25,6 +25,7 @@ export function useBoards(userId) {
   useEffect(() => { fetchBoards() }, [fetchBoards])
 
   async function createBoard(title, color) {
+    // Use RPC or two-step: insert board, then add self as admin
     const { data: board, error } = await supabase
       .from('boards')
       .insert({ title, color, created_by: userId })
@@ -34,9 +35,11 @@ export function useBoards(userId) {
     if (error) throw error
 
     // Add creator as admin member
-    await supabase
+    const { error: memberError } = await supabase
       .from('board_members')
       .insert({ board_id: board.id, user_id: userId, role: 'admin' })
+
+    if (memberError) console.error('Error adding member:', memberError)
 
     await fetchBoards()
     return board
