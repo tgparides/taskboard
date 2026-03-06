@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useBoards } from '../hooks/useBoards'
 import { BOARD_COLORS } from '../lib/constants'
+import { getBoardPreviewStyle } from '../lib/backgrounds'
 import ConfirmDialog from './ConfirmDialog'
 import Layout from './Layout'
 
@@ -45,7 +46,7 @@ export default function BoardsPage() {
               key={board.id}
               onClick={() => navigate(`/board/${board.id}`)}
               className="relative rounded-lg p-4 h-24 cursor-pointer hover:opacity-90 transition-opacity group"
-              style={{ backgroundColor: board.color || BOARD_COLORS[0] }}
+              style={getBoardPreviewStyle(board.color)}
             >
               <span className="text-white font-semibold text-sm">{board.title}</span>
               <button

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { DragDropContext, Droppable } from '@hello-pangea/dnd'
 import { useBoard } from '../hooks/useBoard'
 import { useRealtimeBoard } from '../hooks/useRealtimeBoard'
+import { getBoardBackground } from '../lib/backgrounds'
 import Layout from './Layout'
 import BoardHeader from './BoardHeader'
 import Column from './Column'
@@ -131,7 +132,7 @@ export default function BoardPage() {
               ref={provided.innerRef}
               {...provided.droppableProps}
               className="flex-1 flex gap-4 p-4 overflow-x-auto items-start"
-              style={{ backgroundColor: board.color ? `${board.color}22` : '#3b82f622' }}
+              style={getBoardBackground(board.color).board}
             >
               {sortedColumns.map((column, i) => (
                 <Column

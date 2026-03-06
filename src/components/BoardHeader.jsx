@@ -1,11 +1,16 @@
 import { useState } from 'react'
+import { getBoardBackground } from '../lib/backgrounds'
+import BackgroundPicker from './BackgroundPicker'
 
 export default function BoardHeader({ board, members, onInvite, onUpdateBoard }) {
   const [showInvite, setShowInvite] = useState(false)
+  const [showBgPicker, setShowBgPicker] = useState(false)
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [editingTitle, setEditingTitle] = useState(false)
   const [title, setTitle] = useState(board.title)
+
+  const { header: headerStyle } = getBoardBackground(board.color)
 
   async function saveTitle() {
     if (title.trim() && title.trim() !== board.title) {
@@ -33,10 +38,19 @@ export default function BoardHeader({ board, members, onInvite, onUpdateBoard })
     }
   }
 
+  async function handleBgSelect(colorOrId) {
+    setShowBgPicker(false)
+    try {
+      await onUpdateBoard({ color: colorOrId })
+    } catch (err) {
+      console.error('Failed to update background:', err)
+    }
+  }
+
   return (
     <div
       className="px-4 py-2 flex items-center gap-3 border-b"
-      style={{ backgroundColor: board.color ? `${board.color}dd` : '#3b82f6dd' }}
+      style={headerStyle}
     >
       {editingTitle ? (
         <input
@@ -70,7 +84,25 @@ export default function BoardHeader({ board, members, onInvite, onUpdateBoard })
 
       <div className="relative">
         <button
-          onClick={() => setShowInvite(!showInvite)}
+          onClick={() => { setShowBgPicker(!showBgPicker); setShowInvite(false) }}
+          className="text-white/80 hover:text-white bg-white/20 hover:bg-white/30 border-none px-2 py-1 rounded text-sm cursor-pointer"
+        >
+          Background
+        </button>
+
+        {showBgPicker && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setShowBgPicker(false)} />
+            <div className="absolute left-0 top-full mt-2 bg-white rounded-lg shadow-lg p-3 z-20">
+              <BackgroundPicker current={board.color} onSelect={handleBgSelect} />
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="relative">
+        <button
+          onClick={() => { setShowInvite(!showInvite); setShowBgPicker(false) }}
           className="text-white/80 hover:text-white bg-white/20 hover:bg-white/30 border-none px-2 py-1 rounded text-sm cursor-pointer"
         >
           Invite
