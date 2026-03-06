@@ -7,9 +7,14 @@ export default function BoardHeader({ board, members, onInvite, onUpdateBoard })
   const [editingTitle, setEditingTitle] = useState(false)
   const [title, setTitle] = useState(board.title)
 
-  function saveTitle() {
+  async function saveTitle() {
     if (title.trim() && title.trim() !== board.title) {
-      onUpdateBoard({ title: title.trim() })
+      try {
+        await onUpdateBoard({ title: title.trim() })
+      } catch (err) {
+        console.error('Failed to update board title:', err)
+        setTitle(board.title)
+      }
     } else {
       setTitle(board.title)
     }
