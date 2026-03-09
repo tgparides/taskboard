@@ -4,7 +4,7 @@ import ColumnHeader from './ColumnHeader'
 import CardPreview from './CardPreview'
 import AddCardForm from './AddCardForm'
 
-export default function Column({ column, cards, labels, index, onUpdateColumn, onDeleteColumn, onAddCard, onAddCardWithImage, onCardClick }) {
+export default function Column({ column, cards, labels, index, onUpdateColumn, onDeleteColumn, onAddCard, onAddCardWithImage, onCardClick, onToggleComplete }) {
   const [showAddCard, setShowAddCard] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -126,6 +126,7 @@ export default function Column({ column, cards, labels, index, onUpdateColumn, o
                     index={i}
                     labels={labels}
                     onClick={onCardClick}
+                    onToggleComplete={onToggleComplete}
                   />
                 ))}
                 {provided.placeholder}

@@ -146,6 +146,7 @@ export default function BoardPage() {
                   onAddCard={addCard}
                   onAddCardWithImage={addCardWithImage}
                   onCardClick={openCard}
+                  onToggleComplete={(cardId, completed) => updateCard(cardId, { completed })}
                 />
               ))}
               {provided.placeholder}

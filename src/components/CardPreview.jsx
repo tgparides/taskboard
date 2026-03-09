@@ -1,12 +1,17 @@
 import { Draggable } from '@hello-pangea/dnd'
 
-export default function CardPreview({ card, index, labels, onClick }) {
+export default function CardPreview({ card, index, labels, onClick, onToggleComplete }) {
   const cardLabels = (card.card_labels || [])
     .map(cl => labels.find(l => l.id === cl.label_id))
     .filter(Boolean)
 
   const isDueSoon = card.due_date && new Date(card.due_date) < new Date(Date.now() + 86400000)
   const isOverdue = card.due_date && new Date(card.due_date) < new Date()
+
+  function handleCheck(e) {
+    e.stopPropagation()
+    onToggleComplete(card.id, !card.completed)
+  }
 
   return (
     <Draggable draggableId={card.id} index={index}>
@@ -18,7 +23,7 @@ export default function CardPreview({ card, index, labels, onClick }) {
           onClick={() => onClick(card)}
           className={`bg-white rounded-lg shadow-sm border border-gray-200 p-2 mb-2 cursor-pointer hover:border-gray-400 transition-colors ${
             snapshot.isDragging ? 'shadow-lg rotate-2' : ''
-          }`}
+          } ${card.completed ? 'opacity-60' : ''}`}
         >
           {/* Cover image */}
           {card.cover_url && (
@@ -43,8 +48,27 @@ export default function CardPreview({ card, index, labels, onClick }) {
             </div>
           )}
 
-          {/* Title */}
-          <p className="text-sm text-gray-800 break-words">{card.title}</p>
+          {/* Title with check button */}
+          <div className="flex items-start gap-1.5">
+            <button
+              onClick={handleCheck}
+              className={`flex-shrink-0 w-5 h-5 mt-0.5 rounded-full border-2 flex items-center justify-center cursor-pointer transition-colors ${
+                card.completed
+                  ? 'bg-green-500 border-green-500 text-white'
+                  : 'border-gray-300 bg-white hover:border-green-400'
+              }`}
+              title={card.completed ? 'Mark incomplete' : 'Mark complete'}
+            >
+              {card.completed && (
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
+            <p className={`text-sm break-words ${card.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+              {card.title}
+            </p>
+          </div>
 
           {/* Footer: due date + members */}
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
