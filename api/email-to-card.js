@@ -35,29 +35,32 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: `No board found with code: ${boardCode}` })
     }
 
-    // Get the first column (lowest position) for this board
-    const { data: column, error: colError } = await supabase
+    // Get the next column position (add to the left)
+    const { data: firstCol } = await supabase
       .from('columns')
-      .select('id')
+      .select('position')
       .eq('board_id', board.id)
       .order('position', { ascending: true })
       .limit(1)
       .single()
 
-    if (colError || !column) {
-      return res.status(404).json({ error: 'Board has no columns. Create a column first.' })
-    }
+    const colPosition = firstCol ? firstCol.position / 2 : 65536
 
-    // Get the next position in the column (add to top)
-    const { data: topCard } = await supabase
-      .from('cards')
-      .select('position')
-      .eq('column_id', column.id)
-      .order('position', { ascending: true })
-      .limit(1)
+    // Create a new column with the email subject as the title
+    const { data: column, error: colError } = await supabase
+      .from('columns')
+      .insert({
+        board_id: board.id,
+        title: subject.substring(0, 200),
+        position: colPosition,
+      })
+      .select('id')
       .single()
 
-    const position = topCard ? topCard.position / 2 : 65536
+    if (colError) {
+      console.error('Error creating column:', colError)
+      return res.status(500).json({ error: 'Failed to create column' })
+    }
 
     // Build description from email
     const description = [
@@ -66,14 +69,14 @@ export default async function handler(req, res) {
       body || '',
     ].filter(v => v !== null).join('\n')
 
-    // Create the card
+    // Create a card in the new column with the email details
     const { data: card, error: cardError } = await supabase
       .from('cards')
       .insert({
         column_id: column.id,
         title: subject.substring(0, 500),
         description: description.substring(0, 10000),
-        position,
+        position: 65536,
       })
       .select('id')
       .single()
@@ -83,7 +86,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to create card' })
     }
 
-    return res.status(200).json({ success: true, cardId: card.id })
+    return res.status(200).json({ success: true, columnId: column.id, cardId: card.id })
   } catch (err) {
     console.error('Webhook error:', err)
     return res.status(500).json({ error: 'Internal server error' })

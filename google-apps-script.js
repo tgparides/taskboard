@@ -27,7 +27,7 @@ function setup() {
   if (!existing) {
     ScriptApp.newTrigger('processEmails')
       .timeBased()
-      .everyMinutes(2)
+      .everyMinutes(1)
       .create()
   }
 
