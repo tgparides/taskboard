@@ -5,10 +5,12 @@ import BackgroundPicker from './BackgroundPicker'
 export default function BoardHeader({ board, members, onInvite, onUpdateBoard }) {
   const [showInvite, setShowInvite] = useState(false)
   const [showBgPicker, setShowBgPicker] = useState(false)
+  const [showEmailSetup, setShowEmailSetup] = useState(false)
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [editingTitle, setEditingTitle] = useState(false)
   const [title, setTitle] = useState(board.title)
+  const [emailCode, setEmailCode] = useState(board.email_code || '')
 
   const { header: headerStyle } = getBoardBackground(board.color)
 
@@ -37,6 +39,27 @@ export default function BoardHeader({ board, members, onInvite, onUpdateBoard })
       setError(err.message)
     }
   }
+
+  function closeAllPopovers() {
+    setShowInvite(false)
+    setShowBgPicker(false)
+    setShowEmailSetup(false)
+  }
+
+  async function saveEmailCode(e) {
+    e.preventDefault()
+    const code = emailCode.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
+    try {
+      await onUpdateBoard({ email_code: code || null })
+      setEmailCode(code)
+    } catch (err) {
+      console.error('Failed to save email code:', err)
+    }
+  }
+
+  const emailAddress = board.email_code
+    ? `signstaskboard+${board.email_code}@gmail.com`
+    : null
 
   async function handleBgSelect(colorOrId) {
     setShowBgPicker(false)
@@ -84,7 +107,7 @@ export default function BoardHeader({ board, members, onInvite, onUpdateBoard })
 
       <div className="relative">
         <button
-          onClick={() => { setShowBgPicker(!showBgPicker); setShowInvite(false) }}
+          onClick={() => { const next = !showBgPicker; closeAllPopovers(); setShowBgPicker(next) }}
           className="text-white/80 hover:text-white bg-white/20 hover:bg-white/30 border-none px-2 py-1 rounded text-sm cursor-pointer"
         >
           Background
@@ -102,7 +125,51 @@ export default function BoardHeader({ board, members, onInvite, onUpdateBoard })
 
       <div className="relative">
         <button
-          onClick={() => { setShowInvite(!showInvite); setShowBgPicker(false) }}
+          onClick={() => { const next = !showEmailSetup; closeAllPopovers(); setShowEmailSetup(next) }}
+          className="text-white/80 hover:text-white bg-white/20 hover:bg-white/30 border-none px-2 py-1 rounded text-sm cursor-pointer"
+        >
+          Email-In
+        </button>
+
+        {showEmailSetup && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setShowEmailSetup(false)} />
+            <div className="absolute left-0 top-full mt-2 bg-white rounded-lg shadow-lg p-3 z-20 w-80">
+              <p className="text-sm font-medium mb-2 text-gray-700">Email-to-Card</p>
+              <p className="text-xs text-gray-500 mb-2">
+                Forward emails to create cards in this board's first column.
+              </p>
+              <form onSubmit={saveEmailCode} className="mb-2">
+                <label className="text-xs text-gray-500">Board code (letters, numbers, dashes)</label>
+                <div className="flex gap-2 mt-1">
+                  <input
+                    value={emailCode}
+                    onChange={e => setEmailCode(e.target.value)}
+                    placeholder="e.g. orders"
+                    className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 border-none cursor-pointer"
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
+              {emailAddress && (
+                <div className="bg-gray-50 rounded p-2 mt-2">
+                  <p className="text-xs text-gray-500 mb-1">Forward emails to:</p>
+                  <p className="text-sm font-mono text-blue-700 break-all select-all">{emailAddress}</p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="relative">
+        <button
+          onClick={() => { const next = !showInvite; closeAllPopovers(); setShowInvite(next) }}
           className="text-white/80 hover:text-white bg-white/20 hover:bg-white/30 border-none px-2 py-1 rounded text-sm cursor-pointer"
         >
           Invite
