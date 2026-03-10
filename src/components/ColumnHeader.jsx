@@ -22,14 +22,6 @@ export default function ColumnHeader({ column, onUpdate, onDelete, cardCount }) 
 
   return (
     <div>
-      {/* Color bar */}
-      {column.color && (
-        <div
-          className="h-1.5 rounded-t-xl"
-          style={{ backgroundColor: column.color }}
-        />
-      )}
-
       <div className="flex items-center justify-between px-2 py-1.5 mb-1">
         {editing ? (
           <input

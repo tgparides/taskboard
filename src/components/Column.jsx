@@ -92,9 +92,10 @@ export default function Column({ column, cards, labels, index, onUpdateColumn, o
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`bg-gray-100 rounded-xl w-72 flex-shrink-0 flex flex-col max-h-full ${
-            dragOver ? 'ring-2 ring-blue-400 bg-blue-50' : ''
+          className={`rounded-xl w-72 flex-shrink-0 flex flex-col max-h-full ${
+            dragOver ? 'ring-2 ring-blue-400' : ''
           }`}
+          style={{ backgroundColor: column.color ? column.color + '18' : '#f3f4f6' }}
           onDrop={handleImageDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
