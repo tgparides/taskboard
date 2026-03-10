@@ -7,6 +7,17 @@ export const LABEL_COLORS = [
   { name: 'Blue', bg: 'bg-blue-500', hex: '#3b82f6' },
 ]
 
+export const COLUMN_COLORS = [
+  { name: 'None', hex: null },
+  { name: 'Gray', hex: '#9ca3af' },
+  { name: 'Yellow', hex: '#facc15', label: 'Waiting' },
+  { name: 'Blue', hex: '#3b82f6', label: 'In Process' },
+  { name: 'Green', hex: '#22c55e', label: 'Complete' },
+  { name: 'Red', hex: '#ef4444', label: 'Urgent' },
+  { name: 'Purple', hex: '#a855f7', label: 'On Hold' },
+  { name: 'Orange', hex: '#f97316', label: 'Needs Attention' },
+]
+
 export const BOARD_COLORS = [
   '#3b82f6', '#ef4444', '#22c55e', '#f97316',
   '#a855f7', '#06b6d4', '#ec4899', '#6366f1',

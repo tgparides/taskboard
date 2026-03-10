@@ -150,7 +150,7 @@ export default function BoardPage() {
                 />
               ))}
               {provided.placeholder}
-              <AddColumnButton onAdd={addColumn} />
+              <AddColumnButton onAdd={(title, color) => addColumn(title, color)} />
             </div>
           )}
         </Droppable>

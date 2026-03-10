@@ -61,11 +61,11 @@ export function useBoard(boardId) {
   }
 
   // Column operations
-  async function addColumn(title) {
+  async function addColumn(title, color = null) {
     const position = getInsertPosition(columns, columns.length)
     const { data, error } = await supabase
       .from('columns')
-      .insert({ board_id: boardId, title, position })
+      .insert({ board_id: boardId, title, position, color })
       .select()
       .single()
     if (error) throw error
