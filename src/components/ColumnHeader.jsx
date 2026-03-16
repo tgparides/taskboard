@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { COLUMN_COLORS } from '../lib/constants'
 
-export default function ColumnHeader({ column, onUpdate, onDelete, cardCount }) {
+export default function ColumnHeader({ column, onUpdate, onDelete, cardCount, onCollapse }) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(column.title)
   const [showMenu, setShowMenu] = useState(false)
@@ -90,6 +90,12 @@ export default function ColumnHeader({ column, onUpdate, onDelete, cardCount }) 
                     </div>
                   </div>
                 )}
+                <button
+                  onClick={() => { onCollapse(); setShowMenu(false) }}
+                  className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 bg-transparent border-none cursor-pointer"
+                >
+                  Collapse List
+                </button>
                 <button
                   onClick={() => { onDelete(column.id); setShowMenu(false) }}
                   className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 bg-transparent border-none cursor-pointer"

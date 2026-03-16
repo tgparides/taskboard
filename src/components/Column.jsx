@@ -4,7 +4,7 @@ import ColumnHeader from './ColumnHeader'
 import CardPreview from './CardPreview'
 import AddCardForm from './AddCardForm'
 
-export default function Column({ column, cards, labels, index, onUpdateColumn, onDeleteColumn, onAddCard, onAddCardWithImage, onCardClick, onToggleComplete }) {
+export default function Column({ column, cards, labels, index, onUpdateColumn, onDeleteColumn, onAddCard, onAddCardWithImage, onCardClick, onToggleComplete, collapsed, onToggleCollapse }) {
   const [showAddCard, setShowAddCard] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -86,6 +86,35 @@ export default function Column({ column, cards, labels, index, onUpdateColumn, o
     e.target.value = ''
   }
 
+  if (collapsed) {
+    return (
+      <Draggable draggableId={`col-${column.id}`} index={index}>
+        {(provided) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+            className="rounded-xl w-10 flex-shrink-0 flex flex-col items-center cursor-pointer hover:opacity-80 transition-opacity"
+            style={{ backgroundColor: column.color ? column.color + '90' : '#f3f4f6', minHeight: 200 }}
+            onClick={() => onToggleCollapse(column.id)}
+          >
+            <div className="flex flex-col items-center pt-2 pb-2 h-full">
+              <span className="text-xs font-medium text-gray-500 mb-2">{cards.length}</span>
+              <div className="flex-1 flex items-center">
+                <span
+                  className="text-sm font-semibold text-gray-700 whitespace-nowrap"
+                  style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                >
+                  {column.title}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Draggable>
+    )
+  }
+
   return (
     <Draggable draggableId={`col-${column.id}`} index={index}>
       {(provided) => (
@@ -108,6 +137,7 @@ export default function Column({ column, cards, labels, index, onUpdateColumn, o
               cardCount={cards.length}
               onUpdate={onUpdateColumn}
               onDelete={onDeleteColumn}
+              onCollapse={() => onToggleCollapse(column.id)}
             />
           </div>
 

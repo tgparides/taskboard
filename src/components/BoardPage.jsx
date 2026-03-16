@@ -24,6 +24,17 @@ export default function BoardPage() {
   } = useBoard(boardId)
 
   const [filters, setFilters] = useState({ search: '', labelId: null, memberId: null, dueSoon: false })
+  const [collapsedCols, setCollapsedCols] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(`collapsed-${boardId}`) || '{}') } catch { return {} }
+  })
+
+  function toggleCollapse(colId) {
+    setCollapsedCols(prev => {
+      const next = { ...prev, [colId]: !prev[colId] }
+      localStorage.setItem(`collapsed-${boardId}`, JSON.stringify(next))
+      return next
+    })
+  }
 
   // Real-time sync
   useRealtimeBoard(boardId, {
@@ -147,6 +158,8 @@ export default function BoardPage() {
                   onAddCardWithImage={addCardWithImage}
                   onCardClick={openCard}
                   onToggleComplete={(cardId, completed) => updateCard(cardId, { completed })}
+                  collapsed={!!collapsedCols[column.id]}
+                  onToggleCollapse={toggleCollapse}
                 />
               ))}
               {provided.placeholder}
