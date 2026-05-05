@@ -5,7 +5,15 @@ import { useAttachments } from '../hooks/useAttachments'
 import LabelPicker from './LabelPicker'
 import MemberPicker from './MemberPicker'
 
-export default function CardDetailModal({ card, labels, members, onClose, onUpdate, onDelete, onToggleLabel, onToggleMember, onCreateLabel }) {
+const PRIORITY_OPTIONS = [
+  { value: null, label: 'None',   color: '#e5e7eb', text: '#374151' },
+  { value: 0,    label: 'Low',    color: '#94a3b8', text: '#ffffff' },
+  { value: 1,    label: 'Medium', color: '#3b82f6', text: '#ffffff' },
+  { value: 2,    label: 'High',   color: '#f59e0b', text: '#ffffff' },
+  { value: 3,    label: 'Urgent', color: '#ef4444', text: '#ffffff' },
+]
+
+export default function CardDetailModal({ card, labels, members, columns = [], onClose, onUpdate, onDelete, onArchive, onMoveCard, onToggleLabel, onToggleMember, onCreateLabel }) {
   const { user } = useAuth()
   const { comments, addComment, deleteComment } = useComments(card?.id)
   const { attachments, uploadAttachment, deleteAttachment } = useAttachments(card?.id)
@@ -346,10 +354,58 @@ export default function CardDetailModal({ card, labels, members, onClose, onUpda
                 Attachment
               </button>
 
+              {/* Priority */}
+              <div>
+                <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Priority</label>
+                <select
+                  value={card.priority ?? ''}
+                  onChange={e => {
+                    const v = e.target.value === '' ? null : parseInt(e.target.value, 10)
+                    onUpdate(card.id, { priority: v })
+                  }}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded bg-white"
+                >
+                  {PRIORITY_OPTIONS.map(p => (
+                    <option key={p.label} value={p.value ?? ''}>{p.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Move to column */}
+              {columns.length > 1 && onMoveCard && (
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Move to column</label>
+                  <select
+                    value={card.column_id}
+                    onChange={e => {
+                      const newColId = e.target.value
+                      if (newColId === card.column_id) return
+                      // Move to end of the chosen column
+                      onMoveCard(card.id, newColId, 9999)
+                    }}
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded bg-white"
+                  >
+                    {columns.map(c => (
+                      <option key={c.id} value={c.id}>{c.title}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <hr className="border-gray-200" />
 
+              {onArchive && (
+                <button
+                  onClick={() => onArchive(card.id)}
+                  className="w-full text-left px-3 py-1.5 text-sm bg-amber-50 hover:bg-amber-100 text-amber-700 rounded border-none cursor-pointer"
+                  title="Archive this card — it will be hidden from the board but kept in the Archive view"
+                >
+                  📦 Archive Card
+                </button>
+              )}
+
               <button
-                onClick={() => { if (confirm('Delete this card?')) onDelete(card.id) }}
+                onClick={() => { if (confirm('Delete this card permanently?')) onDelete(card.id) }}
                 className="w-full text-left px-3 py-1.5 text-sm bg-red-50 hover:bg-red-100 text-red-600 rounded border-none cursor-pointer"
               >
                 Delete Card

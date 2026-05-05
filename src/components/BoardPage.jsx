@@ -10,6 +10,7 @@ import Column from './Column'
 import AddColumnButton from './AddColumnButton'
 import SearchFilter from './SearchFilter'
 import CardDetailModal from './CardDetailModal'
+import ArchiveModal from './ArchiveModal'
 
 export default function BoardPage() {
   const { id: boardId, cardId } = useParams()
@@ -17,13 +18,15 @@ export default function BoardPage() {
   const {
     board, columns, cards, labels, members, loading,
     updateBoard,
-    addColumn, updateColumn, deleteColumn, moveColumn,
+    addColumn, updateColumn, deleteColumn, moveColumn, shiftColumn,
     addCard, addCardWithImage, updateCard, deleteCard, moveCard,
+    archiveCard, unarchiveCard,
     addLabel, toggleCardLabel, toggleCardMember, inviteMember,
     refetch,
   } = useBoard(boardId)
 
   const [filters, setFilters] = useState({ search: '', labelId: null, memberId: null, dueSoon: false })
+  const [archiveOpen, setArchiveOpen] = useState(false)
   const [collapsedCols, setCollapsedCols] = useState(() => {
     try { return JSON.parse(localStorage.getItem(`collapsed-${boardId}`) || '{}') } catch { return {} }
   })
@@ -44,9 +47,10 @@ export default function BoardPage() {
     onLabelChange: useCallback(() => refetch(), [refetch]),
   })
 
-  // Filter cards
+  // Filter cards (also hides archived cards from the active board view)
   const filteredCards = useMemo(() => {
     return cards.filter(card => {
+      if (card.archived_at) return false
       if (filters.search && !card.title.toLowerCase().includes(filters.search.toLowerCase()) &&
           !(card.description || '').toLowerCase().includes(filters.search.toLowerCase())) {
         return false
@@ -127,7 +131,14 @@ export default function BoardPage() {
 
   return (
     <Layout>
-      <BoardHeader board={board} members={members} onInvite={inviteMember} onUpdateBoard={updateBoard} />
+      <BoardHeader
+        board={board}
+        members={members}
+        onInvite={inviteMember}
+        onUpdateBoard={updateBoard}
+        archivedCount={cards.filter(c => c.archived_at).length}
+        onOpenArchive={() => setArchiveOpen(true)}
+      />
 
       <SearchFilter
         labels={labels}
@@ -152,8 +163,11 @@ export default function BoardPage() {
                   cards={filteredCards.filter(c => c.column_id === column.id)}
                   labels={labels}
                   index={i}
+                  isFirst={i === 0}
+                  isLast={i === sortedColumns.length - 1}
                   onUpdateColumn={updateColumn}
                   onDeleteColumn={deleteColumn}
+                  onShiftColumn={shiftColumn}
                   onAddCard={addCard}
                   onAddCardWithImage={addCardWithImage}
                   onCardClick={openCard}
@@ -174,12 +188,26 @@ export default function BoardPage() {
           card={selectedCard}
           labels={labels}
           members={members}
+          columns={sortedColumns}
           onClose={closeCard}
           onUpdate={updateCard}
           onDelete={handleDeleteCard}
+          onArchive={async (id) => { await archiveCard(id); closeCard() }}
+          onMoveCard={moveCard}
           onToggleLabel={toggleCardLabel}
           onToggleMember={toggleCardMember}
           onCreateLabel={(name, color) => addLabel(name, color)}
+        />
+      )}
+
+      {archiveOpen && (
+        <ArchiveModal
+          archivedCards={cards.filter(c => c.archived_at).sort((a, b) => new Date(b.archived_at) - new Date(a.archived_at))}
+          columns={columns}
+          onClose={() => setArchiveOpen(false)}
+          onUnarchive={unarchiveCard}
+          onDelete={deleteCard}
+          onOpenCard={openCard}
         />
       )}
     </Layout>

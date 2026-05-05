@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { COLUMN_COLORS } from '../lib/constants'
 
-export default function ColumnHeader({ column, onUpdate, onDelete, cardCount, onCollapse }) {
+export default function ColumnHeader({ column, onUpdate, onDelete, cardCount, onCollapse, onShiftLeft, onShiftRight }) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(column.title)
   const [showMenu, setShowMenu] = useState(false)
@@ -41,6 +41,24 @@ export default function ColumnHeader({ column, onUpdate, onDelete, cardCount, on
             <span className="ml-1.5 text-xs font-normal text-gray-400">{cardCount}</span>
           </h3>
         )}
+
+        {/* Shift left / right — quick column reorder without drag */}
+        <button
+          onClick={onShiftLeft || undefined}
+          disabled={!onShiftLeft}
+          title="Move column left"
+          className="text-gray-400 hover:text-gray-700 bg-transparent border-none cursor-pointer text-base px-1 disabled:opacity-20 disabled:cursor-not-allowed"
+        >
+          ‹
+        </button>
+        <button
+          onClick={onShiftRight || undefined}
+          disabled={!onShiftRight}
+          title="Move column right"
+          className="text-gray-400 hover:text-gray-700 bg-transparent border-none cursor-pointer text-base px-1 disabled:opacity-20 disabled:cursor-not-allowed"
+        >
+          ›
+        </button>
 
         <div className="relative ml-1">
           <button

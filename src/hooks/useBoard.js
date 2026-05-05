@@ -158,6 +158,30 @@ export function useBoard(boardId) {
     setCards(prev => prev.filter(c => c.id !== cardId))
   }
 
+  async function archiveCard(cardId) {
+    const archived_at = new Date().toISOString()
+    setCards(prev => prev.map(c => c.id === cardId ? { ...c, archived_at } : c))
+    const { error } = await supabase.from('cards').update({ archived_at }).eq('id', cardId)
+    if (error) { console.error('Archive failed:', error); fetchBoard() }
+  }
+
+  async function unarchiveCard(cardId) {
+    setCards(prev => prev.map(c => c.id === cardId ? { ...c, archived_at: null } : c))
+    const { error } = await supabase.from('cards').update({ archived_at: null }).eq('id', cardId)
+    if (error) { console.error('Unarchive failed:', error); fetchBoard() }
+  }
+
+  // Move a column up or down by one position (relative to its current spot).
+  // delta = -1 → move up; +1 → move down.
+  async function shiftColumn(columnId, delta) {
+    const sorted = [...columns].sort((a, b) => a.position - b.position)
+    const idx = sorted.findIndex(c => c.id === columnId)
+    if (idx < 0) return
+    const newIdx = idx + delta
+    if (newIdx < 0 || newIdx >= sorted.length) return
+    return moveColumn(columnId, newIdx)
+  }
+
   async function moveCard(cardId, toColumnId, newIndex) {
     const colCards = cards
       .filter(c => c.column_id === toColumnId && c.id !== cardId)
@@ -261,8 +285,9 @@ export function useBoard(boardId) {
   return {
     board, columns, cards, labels, members, loading,
     updateBoard,
-    addColumn, updateColumn, deleteColumn, moveColumn,
+    addColumn, updateColumn, deleteColumn, moveColumn, shiftColumn,
     addCard, addCardWithImage, updateCard, deleteCard, moveCard,
+    archiveCard, unarchiveCard,
     addLabel, toggleCardLabel,
     toggleCardMember, inviteMember,
     refetch: fetchBoard,

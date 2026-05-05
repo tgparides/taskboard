@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { getBoardBackground } from '../lib/backgrounds'
 import BackgroundPicker from './BackgroundPicker'
 
-export default function BoardHeader({ board, members, onInvite, onUpdateBoard }) {
+export default function BoardHeader({ board, members, onInvite, onUpdateBoard, archivedCount = 0, onOpenArchive }) {
   const [showInvite, setShowInvite] = useState(false)
   const [showBgPicker, setShowBgPicker] = useState(false)
   const [showEmailSetup, setShowEmailSetup] = useState(false)
@@ -104,6 +104,19 @@ export default function BoardHeader({ board, members, onInvite, onUpdateBoard })
           </div>
         ))}
       </div>
+
+      {onOpenArchive && (
+        <button
+          onClick={onOpenArchive}
+          className="text-white/80 hover:text-white bg-white/20 hover:bg-white/30 border-none px-2 py-1 rounded text-sm cursor-pointer flex items-center gap-1"
+          title="View archived cards"
+        >
+          📦 Archive
+          {archivedCount > 0 && (
+            <span className="bg-white/30 text-white text-[10px] font-bold rounded-full px-1.5">{archivedCount}</span>
+          )}
+        </button>
+      )}
 
       <div className="relative">
         <button

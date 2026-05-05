@@ -4,13 +4,20 @@ import ColumnHeader from './ColumnHeader'
 import CardPreview from './CardPreview'
 import AddCardForm from './AddCardForm'
 
-export default function Column({ column, cards, labels, index, onUpdateColumn, onDeleteColumn, onAddCard, onAddCardWithImage, onCardClick, onToggleComplete, collapsed, onToggleCollapse }) {
+export default function Column({ column, cards, labels, index, isFirst, isLast, onUpdateColumn, onDeleteColumn, onShiftColumn, onAddCard, onAddCardWithImage, onCardClick, onToggleComplete, collapsed, onToggleCollapse }) {
   const [showAddCard, setShowAddCard] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef()
 
-  const sortedCards = [...cards].sort((a, b) => a.position - b.position)
+  // Higher priority floats to top (urgent → low → null), then position keeps user's manual order.
+  // Treat null priority as -1 so it sorts last.
+  const sortedCards = [...cards].sort((a, b) => {
+    const pa = a.priority == null ? -1 : a.priority
+    const pb = b.priority == null ? -1 : b.priority
+    if (pb !== pa) return pb - pa
+    return a.position - b.position
+  })
 
   function getImageFiles(dataTransfer) {
     const files = []
@@ -138,6 +145,8 @@ export default function Column({ column, cards, labels, index, onUpdateColumn, o
               onUpdate={onUpdateColumn}
               onDelete={onDeleteColumn}
               onCollapse={() => onToggleCollapse(column.id)}
+              onShiftLeft={isFirst ? null : () => onShiftColumn?.(column.id, -1)}
+              onShiftRight={isLast ? null : () => onShiftColumn?.(column.id, 1)}
             />
           </div>
 

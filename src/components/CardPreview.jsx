@@ -1,6 +1,14 @@
 import { Draggable } from '@hello-pangea/dnd'
 
+const PRIORITY_PILL = {
+  0: { label: 'Low',    bg: '#f1f5f9', text: '#475569' },
+  1: { label: 'Medium', bg: '#dbeafe', text: '#1d4ed8' },
+  2: { label: 'High',   bg: '#fef3c7', text: '#b45309' },
+  3: { label: 'Urgent', bg: '#fee2e2', text: '#b91c1c' },
+}
+
 export default function CardPreview({ card, index, labels, onClick, onToggleComplete }) {
+  const pri = card.priority != null ? PRIORITY_PILL[card.priority] : null
   const cardLabels = (card.card_labels || [])
     .map(cl => labels.find(l => l.id === cl.label_id))
     .filter(Boolean)
@@ -70,8 +78,16 @@ export default function CardPreview({ card, index, labels, onClick, onToggleComp
             </p>
           </div>
 
-          {/* Footer: due date + members */}
+          {/* Footer: priority + due date + members */}
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            {pri && (
+              <span
+                className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded"
+                style={{ background: pri.bg, color: pri.text }}
+              >
+                {pri.label}
+              </span>
+            )}
             {card.due_date && (
               <span className={`text-xs px-1.5 py-0.5 rounded ${
                 isOverdue ? 'bg-red-100 text-red-700' :
