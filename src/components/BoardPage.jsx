@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { DragDropContext, Droppable } from '@hello-pangea/dnd'
 import { useBoard } from '../hooks/useBoard'
@@ -27,6 +27,9 @@ export default function BoardPage() {
 
   const [filters, setFilters] = useState({ search: '', labelId: null, memberId: null, dueSoon: false })
   const [archiveOpen, setArchiveOpen] = useState(false)
+  // Track whether a drag is in progress so we can suppress realtime refetches
+  // (a mid-drag re-render can drop the operation, which is why drags felt flaky).
+  const draggingRef = useRef(false)
   const [collapsedCols, setCollapsedCols] = useState(() => {
     try { return JSON.parse(localStorage.getItem(`collapsed-${boardId}`) || '{}') } catch { return {} }
   })
@@ -39,12 +42,14 @@ export default function BoardPage() {
     })
   }
 
-  // Real-time sync
+  // Real-time sync — but skip refetches mid-drag so the operation isn't interrupted.
+  // (Realtime fires on our own optimistic update too, which is what made drags
+  // unreliable — it'd re-render mid-drop and lose the drop target.)
   useRealtimeBoard(boardId, {
-    onCardChange: useCallback(() => refetch(), [refetch]),
-    onColumnChange: useCallback(() => refetch(), [refetch]),
+    onCardChange: useCallback(() => { if (!draggingRef.current) refetch() }, [refetch]),
+    onColumnChange: useCallback(() => { if (!draggingRef.current) refetch() }, [refetch]),
     onCommentChange: useCallback(() => {}, []),
-    onLabelChange: useCallback(() => refetch(), [refetch]),
+    onLabelChange: useCallback(() => { if (!draggingRef.current) refetch() }, [refetch]),
   })
 
   // Filter cards (also hides archived cards from the active board view)
@@ -81,7 +86,11 @@ export default function BoardPage() {
   // Open card from URL
   const selectedCard = cardId ? cards.find(c => c.id === cardId) : null
 
+  function handleDragStart() {
+    draggingRef.current = true
+  }
   function handleDragEnd(result) {
+    draggingRef.current = false
     const { source, destination, type, draggableId } = result
     if (!destination) return
     if (source.droppableId === destination.droppableId && source.index === destination.index) return
@@ -147,7 +156,7 @@ export default function BoardPage() {
         onChange={setFilters}
       />
 
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <Droppable droppableId="board" type="column" direction="horizontal">
           {(provided) => (
             <div

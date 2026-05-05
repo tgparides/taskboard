@@ -29,9 +29,14 @@ export default function CardPreview({ card, index, labels, onClick, onToggleComp
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           onClick={() => onClick(card)}
-          className={`bg-white rounded-lg shadow-sm border border-gray-200 p-2 mb-2 cursor-pointer hover:border-gray-400 transition-colors ${
-            snapshot.isDragging ? 'shadow-lg rotate-2' : ''
+          className={`bg-white rounded-lg shadow-sm border p-2 mb-2 cursor-grab active:cursor-grabbing hover:border-gray-400 transition-colors ${
+            snapshot.isDragging ? 'shadow-2xl border-blue-400 rotate-1 ring-2 ring-blue-300' : 'border-gray-200'
           } ${card.completed ? 'opacity-60' : ''}`}
+          style={{
+            ...provided.draggableProps.style,
+            // Smoother visual feel during drag
+            cursor: snapshot.isDragging ? 'grabbing' : undefined,
+          }}
         >
           {/* Cover image */}
           {card.cover_url && (

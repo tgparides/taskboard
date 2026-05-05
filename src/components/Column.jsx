@@ -155,10 +155,19 @@ export default function Column({ column, cards, labels, index, isFirst, isLast, 
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`flex-1 overflow-y-auto px-2 pb-2 min-h-[4px] ${
-                  snapshot.isDraggingOver ? 'bg-blue-50' : ''
+                className={`flex-1 overflow-y-auto px-2 pb-2 transition-colors ${
+                  snapshot.isDraggingOver
+                    ? 'bg-blue-100/70 ring-2 ring-blue-400 ring-inset rounded'
+                    : ''
                 }`}
+                // Bigger hit target — empty columns get a usable drop zone instead of a 4px sliver
+                style={{ minHeight: snapshot.isDraggingOver ? 80 : 40 }}
               >
+                {sortedCards.length === 0 && snapshot.isDraggingOver && (
+                  <div className="text-xs text-blue-700 text-center py-6 border-2 border-dashed border-blue-300 rounded my-2">
+                    Drop here
+                  </div>
+                )}
                 {sortedCards.map((card, i) => (
                   <CardPreview
                     key={card.id}
