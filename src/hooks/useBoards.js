@@ -7,18 +7,27 @@ export function useBoards(userId) {
 
   const fetchBoards = useCallback(async () => {
     if (!userId) return
-    const { data, error } = await supabase
-      .from('board_members')
-      .select('board_id, role, boards(id, title, color, created_at, created_by)')
-      .eq('user_id', userId)
-      .order('created_at', { referencedTable: 'boards', ascending: false })
+    // Query boards directly — RLS will scope this to membership for normal users
+    // and let it through fully for admins (is_admin in profiles).
+    const { data: boardsData, error } = await supabase
+      .from('boards')
+      .select('id, title, color, created_at, created_by')
+      .order('created_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching boards:', error)
       return
     }
 
-    setBoards(data.map(bm => ({ ...bm.boards, role: bm.role })))
+    // Layer in the current user's per-board role (for boards where they're a
+    // member). Boards where they're not a member (admin-visible only) get role=null.
+    const { data: memberships } = await supabase
+      .from('board_members')
+      .select('board_id, role')
+      .eq('user_id', userId)
+    const roleByBoard = Object.fromEntries((memberships || []).map(m => [m.board_id, m.role]))
+
+    setBoards((boardsData || []).map(b => ({ ...b, role: roleByBoard[b.id] || null })))
     setLoading(false)
   }, [userId])
 
@@ -46,6 +55,8 @@ export function useBoards(userId) {
   }
 
   async function deleteBoard(boardId) {
+    // FK constraints have ON DELETE CASCADE, so deleting the board
+    // cascades to board_members, columns, cards, labels, etc.
     const { error } = await supabase.from('boards').delete().eq('id', boardId)
     if (error) throw error
     await fetchBoards()
