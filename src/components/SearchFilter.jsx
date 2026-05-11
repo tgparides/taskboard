@@ -4,7 +4,7 @@ export default function SearchFilter({ labels, members, filters, onChange }) {
   const [showFilters, setShowFilters] = useState(false)
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2">
+    <div className="relative z-20 flex items-center gap-2 px-4 py-2">
       <input
         type="text"
         placeholder="Search cards..."

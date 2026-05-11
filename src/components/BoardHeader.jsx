@@ -72,7 +72,7 @@ export default function BoardHeader({ board, members, onInvite, onUpdateBoard, a
 
   return (
     <div
-      className="px-4 py-2 flex items-center gap-3 border-b"
+      className="relative z-30 px-4 py-2 flex items-center gap-3 border-b"
       style={headerStyle}
     >
       {editingTitle ? (
