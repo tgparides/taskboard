@@ -19,6 +19,7 @@ export default function BoardPage() {
     board, columns, cards, labels, members, loading,
     updateBoard,
     addColumn, updateColumn, deleteColumn, moveColumn, shiftColumn,
+    archiveColumn, unarchiveColumn,
     addCard, addCardWithImage, updateCard, deleteCard, moveCard,
     archiveCard, unarchiveCard,
     addLabel, toggleCardLabel, toggleCardMember, inviteMember,
@@ -77,9 +78,15 @@ export default function BoardPage() {
     })
   }, [cards, filters])
 
-  // Sort columns by position
+  // Sort columns by position (active board view hides archived lists)
   const sortedColumns = useMemo(() =>
-    [...columns].sort((a, b) => a.position - b.position),
+    columns.filter(c => !c.archived_at).sort((a, b) => a.position - b.position),
+    [columns]
+  )
+
+  // Archived lists, most recently archived first (shown in the Archive view)
+  const archivedColumns = useMemo(() =>
+    columns.filter(c => c.archived_at).sort((a, b) => new Date(b.archived_at) - new Date(a.archived_at)),
     [columns]
   )
 
@@ -145,7 +152,7 @@ export default function BoardPage() {
         members={members}
         onInvite={inviteMember}
         onUpdateBoard={updateBoard}
-        archivedCount={cards.filter(c => c.archived_at).length}
+        archivedCount={cards.filter(c => c.archived_at).length + archivedColumns.length}
         onOpenArchive={() => setArchiveOpen(true)}
       />
 
@@ -176,6 +183,7 @@ export default function BoardPage() {
                   isLast={i === sortedColumns.length - 1}
                   onUpdateColumn={updateColumn}
                   onDeleteColumn={deleteColumn}
+                  onArchiveColumn={archiveColumn}
                   onShiftColumn={shiftColumn}
                   onAddCard={addCard}
                   onAddCardWithImage={addCardWithImage}
@@ -212,10 +220,14 @@ export default function BoardPage() {
       {archiveOpen && (
         <ArchiveModal
           archivedCards={cards.filter(c => c.archived_at).sort((a, b) => new Date(b.archived_at) - new Date(a.archived_at))}
+          archivedColumns={archivedColumns}
+          cards={cards}
           columns={columns}
           onClose={() => setArchiveOpen(false)}
           onUnarchive={unarchiveCard}
           onDelete={deleteCard}
+          onUnarchiveColumn={unarchiveColumn}
+          onDeleteColumn={deleteColumn}
           onOpenCard={openCard}
         />
       )}

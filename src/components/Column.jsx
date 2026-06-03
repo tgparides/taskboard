@@ -4,7 +4,7 @@ import ColumnHeader from './ColumnHeader'
 import CardPreview from './CardPreview'
 import AddCardForm from './AddCardForm'
 
-export default function Column({ column, cards, labels, index, isFirst, isLast, onUpdateColumn, onDeleteColumn, onShiftColumn, onAddCard, onAddCardWithImage, onCardClick, onToggleComplete, collapsed, onToggleCollapse }) {
+export default function Column({ column, cards, labels, index, isFirst, isLast, onUpdateColumn, onDeleteColumn, onArchiveColumn, onShiftColumn, onAddCard, onAddCardWithImage, onCardClick, onToggleComplete, collapsed, onToggleCollapse }) {
   const [showAddCard, setShowAddCard] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -144,6 +144,7 @@ export default function Column({ column, cards, labels, index, isFirst, isLast, 
               cardCount={cards.length}
               onUpdate={onUpdateColumn}
               onDelete={onDeleteColumn}
+              onArchive={onArchiveColumn}
               onCollapse={() => onToggleCollapse(column.id)}
               onShiftLeft={isFirst ? null : () => onShiftColumn?.(column.id, -1)}
               onShiftRight={isLast ? null : () => onShiftColumn?.(column.id, 1)}

@@ -86,6 +86,19 @@ export function useBoard(boardId) {
     setCards(prev => prev.filter(c => c.column_id !== columnId))
   }
 
+  async function archiveColumn(columnId) {
+    const archived_at = new Date().toISOString()
+    setColumns(prev => prev.map(c => c.id === columnId ? { ...c, archived_at } : c))
+    const { error } = await supabase.from('columns').update({ archived_at }).eq('id', columnId)
+    if (error) { console.error('Archive list failed:', error); fetchBoard() }
+  }
+
+  async function unarchiveColumn(columnId) {
+    setColumns(prev => prev.map(c => c.id === columnId ? { ...c, archived_at: null } : c))
+    const { error } = await supabase.from('columns').update({ archived_at: null }).eq('id', columnId)
+    if (error) { console.error('Unarchive list failed:', error); fetchBoard() }
+  }
+
   async function moveColumn(columnId, newIndex) {
     const sorted = [...columns].sort((a, b) => a.position - b.position)
     const filtered = sorted.filter(c => c.id !== columnId)
@@ -286,6 +299,7 @@ export function useBoard(boardId) {
     board, columns, cards, labels, members, loading,
     updateBoard,
     addColumn, updateColumn, deleteColumn, moveColumn, shiftColumn,
+    archiveColumn, unarchiveColumn,
     addCard, addCardWithImage, updateCard, deleteCard, moveCard,
     archiveCard, unarchiveCard,
     addLabel, toggleCardLabel,
