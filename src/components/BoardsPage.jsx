@@ -111,7 +111,15 @@ export default function BoardsPage() {
         open={!!deleteTarget}
         title="Delete Board"
         message={`Delete "${deleteTarget?.title}"? All columns, cards, and data will be permanently removed.`}
-        onConfirm={async () => { await deleteBoard(deleteTarget.id); setDeleteTarget(null) }}
+        onConfirm={async () => {
+          try {
+            await deleteBoard(deleteTarget.id)
+          } catch (err) {
+            console.error('Delete failed:', err)
+            alert('Failed to delete board: ' + err.message)
+          }
+          setDeleteTarget(null)
+        }}
         onCancel={() => setDeleteTarget(null)}
       />
     </Layout>
