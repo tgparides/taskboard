@@ -50,11 +50,16 @@ function processEmails() {
     for (const message of messages) {
       if (message.isUnread()) {
         try {
-          const toAddress = message.getTo() || ''
-          const boardCode = extractBoardCode(toAddress)
+          // Check every recipient field — the board address is often in CC
+          // (or BCC), not just To. Only reading To meant CC'd emails were
+          // silently skipped and never created cards.
+          const recipients = [message.getTo(), message.getCc(), message.getBcc()]
+            .filter(Boolean)
+            .join(', ')
+          const boardCode = extractBoardCode(recipients)
 
           if (!boardCode) {
-            Logger.log('No board code found in: ' + toAddress)
+            Logger.log('No board code found in: ' + recipients)
             continue
           }
 
