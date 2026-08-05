@@ -1,0 +1,136 @@
+// ============================================================
+// Google Apps Script — Email-to-Card for TaskBoard
+// ============================================================
+// HOW TO USE:
+// 1. Log into signstaskboard@gmail.com
+// 2. Go to https://script.google.com and open the TaskBoard project
+// 3. Select ALL the existing code (Ctrl+A) and delete it
+// 4. Paste THIS entire file
+// 5. *** IMPORTANT *** On the WEBHOOK_SECRET line below, replace
+//    'PASTE_YOUR_REAL_SECRET_HERE' with your real secret value.
+//    (It is the value that was already on line ~12 of your old script.
+//     If you are unsure, copy that line from the old code BEFORE you
+//     delete it. It must match EMAIL_WEBHOOK_SECRET in Vercel.)
+// 6. Click Save (the disk icon). Done — the 1-minute trigger keeps running.
+// ============================================================
+
+const WEBHOOK_URL = 'https://taskboard-xi-seven.vercel.app/api/email-to-card'
+const WEBHOOK_SECRET = 'PASTE_YOUR_REAL_SECRET_HERE' // <-- replace with your real secret
+
+// Label used to track processed emails
+const PROCESSED_LABEL = 'processed'
+
+function setup() {
+  // Create the 'processed' label if it doesn't exist
+  let label = GmailApp.getUserLabelByName(PROCESSED_LABEL)
+  if (!label) {
+    label = GmailApp.createLabel(PROCESSED_LABEL)
+  }
+
+  // Set up a time-based trigger to run every minute
+  const triggers = ScriptApp.getProjectTriggers()
+  const existing = triggers.find(t => t.getHandlerFunction() === 'processEmails')
+  if (!existing) {
+    ScriptApp.newTrigger('processEmails')
+      .timeBased()
+      .everyMinutes(1)
+      .create()
+  }
+
+  Logger.log('Setup complete! Trigger will run every minute.')
+}
+
+function processEmails() {
+  const processedLabel = GmailApp.getUserLabelByName(PROCESSED_LABEL)
+  if (!processedLabel) {
+    Logger.log('No processed label found. Run setup() first.')
+    return
+  }
+
+  // Search for unread emails NOT already processed
+  const threads = GmailApp.search('is:unread -label:' + PROCESSED_LABEL, 0, 20)
+
+  for (const thread of threads) {
+    const messages = thread.getMessages()
+
+    for (const message of messages) {
+      if (message.isUnread()) {
+        try {
+          // Check every recipient field — the board address is often in CC
+          // (or BCC), not just To. Only reading To meant CC'd emails were
+          // silently skipped and never created cards.
+          const recipients = [message.getTo(), message.getCc(), message.getBcc()]
+            .filter(Boolean)
+            .join(', ')
+          const boardCode = extractBoardCode(recipients)
+
+          if (!boardCode) {
+            Logger.log('No board code found in: ' + recipients)
+            continue
+          }
+
+          const subject = message.getSubject() || '(No Subject)'
+          const body = message.getPlainBody() || ''
+          const from = message.getFrom() || ''
+
+          // Send to webhook
+          const response = UrlFetchApp.fetch(WEBHOOK_URL, {
+            method: 'post',
+            contentType: 'application/json',
+            headers: {
+              'x-webhook-secret': WEBHOOK_SECRET,
+            },
+            payload: JSON.stringify({
+              boardCode: boardCode,
+              subject: subject,
+              body: body.substring(0, 10000), // Limit body size
+              from: from,
+            }),
+            muteHttpExceptions: true,
+          })
+
+          const status = response.getResponseCode()
+          const result = response.getContentText()
+          Logger.log('Board: ' + boardCode + ' | Status: ' + status + ' | ' + result)
+
+          if (status === 200) {
+            message.markRead()
+          }
+        } catch (err) {
+          Logger.log('Error processing message: ' + err.message)
+        }
+      }
+    }
+
+    // Mark thread as processed
+    thread.addLabel(processedLabel)
+  }
+}
+
+function extractBoardCode(toAddress) {
+  // Parse signstaskboard+boardcode@gmail.com
+  // toAddress might contain multiple addresses or display names
+  const match = toAddress.match(/signstaskboard\+([a-zA-Z0-9_-]+)@gmail\.com/i)
+  return match ? match[1].toLowerCase() : null
+}
+
+// Manual test function — run this to verify the webhook works
+function testWebhook() {
+  const response = UrlFetchApp.fetch(WEBHOOK_URL, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: {
+      'x-webhook-secret': WEBHOOK_SECRET,
+    },
+    payload: JSON.stringify({
+      boardCode: 'test',
+      subject: 'Test email card',
+      body: 'This is a test card created from Google Apps Script.',
+      from: 'test@example.com',
+    }),
+    muteHttpExceptions: true,
+  })
+
+  Logger.log('Status: ' + response.getResponseCode())
+  Logger.log('Response: ' + response.getContentText())
+}
