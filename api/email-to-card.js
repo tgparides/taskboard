@@ -44,7 +44,9 @@ export default async function handler(req, res) {
       .limit(1)
       .single()
 
-    const colPosition = firstCol ? firstCol.position / 2 : 65536
+    // one step before the first list; halving it shrank positions toward 0 until lists could
+    // no longer be moved (Cynthia, 30 Oct 2026)
+    const colPosition = firstCol ? firstCol.position - 65536 : 65536
 
     // Create a new column with the email subject as the title
     const { data: column, error: colError } = await supabase

@@ -3,8 +3,10 @@
 export function getInsertPosition(items, targetIndex) {
   if (items.length === 0) return 65536
 
+  // one step before the first - halving it (as before Oct 2026) shrank toward 0 until
+  // positions could not be told apart and moves did nothing
   if (targetIndex === 0) {
-    return items[0].position / 2
+    return items[0].position - 65536
   }
 
   if (targetIndex >= items.length) {

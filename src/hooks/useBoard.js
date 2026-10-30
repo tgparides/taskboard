@@ -62,7 +62,7 @@ export function useBoard(boardId) {
 
   // Column operations
   async function addColumn(title, color = null) {
-    const position = getInsertPosition(columns, columns.length)
+    const position = getInsertPosition([...columns].sort((a, b) => a.position - b.position), columns.length)
     const { data, error } = await supabase
       .from('columns')
       .insert({ board_id: boardId, title, position, color })
@@ -99,10 +99,34 @@ export function useBoard(boardId) {
     if (error) { console.error('Unarchive list failed:', error); fetchBoard() }
   }
 
+  // newIndex is a place among the lists on screen, so archived (hidden) lists are left out -
+  // counting them put a moved list in the wrong spot or nowhere (Cynthia, 30 Oct 2026)
   async function moveColumn(columnId, newIndex) {
-    const sorted = [...columns].sort((a, b) => a.position - b.position)
-    const filtered = sorted.filter(c => c.id !== columnId)
+    const visible = columns.filter(c => !c.archived_at).sort((a, b) => a.position - b.position)
+    const filtered = visible.filter(c => c.id !== columnId)
     const position = getInsertPosition(filtered, newIndex)
+
+    // position is stored as a 4-byte real: when the new spot cannot be told apart from its
+    // neighbours there, number the lists again in their new order
+    const f = Math.fround(position)
+    const before = filtered[newIndex - 1], after = filtered[newIndex]
+    const clash = !Number.isFinite(f)
+      || (before && Math.fround(before.position) >= f)
+      || (after && Math.fround(after.position) <= f)
+      || needsNormalization(filtered)
+    if (clash) {
+      const moving = visible.find(c => c.id === columnId)
+      if (!moving) return
+      const order = [...filtered]
+      order.splice(Math.max(0, Math.min(newIndex, order.length)), 0, moving)
+      const next = new Map(normalizePositions(order).map(c => [c.id, c.position]))
+      setColumns(prev => prev.map(c => next.has(c.id) ? { ...c, position: next.get(c.id) } : c))
+      const changed = order.filter(c => c.position !== next.get(c.id))
+      const results = await Promise.all(changed.map(c => supabase.from('columns').update({ position: next.get(c.id) }).eq('id', c.id)))
+      const bad = results.find(r => r.error)
+      if (bad) { console.error('Error renumbering columns:', bad.error); fetchBoard() }
+      return
+    }
 
     // Optimistic update
     setColumns(prev =>
@@ -187,7 +211,7 @@ export function useBoard(boardId) {
   // Move a column up or down by one position (relative to its current spot).
   // delta = -1 → move up; +1 → move down.
   async function shiftColumn(columnId, delta) {
-    const sorted = [...columns].sort((a, b) => a.position - b.position)
+    const sorted = columns.filter(c => !c.archived_at).sort((a, b) => a.position - b.position)
     const idx = sorted.findIndex(c => c.id === columnId)
     if (idx < 0) return
     const newIdx = idx + delta
